@@ -3,111 +3,549 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EA Cricket 07 - Matchbook Leaderboard</title>
+    <title>Cleantech Executive Controller Portal</title>
     <style>
+        :root {
+            --primary: #0f172a;
+            --accent: #2563eb;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #cbd5e1;
+            --text-main: #0f172a;
+            --text-sub: #475569;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --warning: #d97706;
+            --warning-bg: #fffbeb;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            background-color: #f9f9f9;
-            color: #333;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 24px;
+            font-size: 16px;
         }
-        h2 {
-            color: #0056b3;
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            max-width: 800px;
-            margin-top: 20px;
-            background-color: #fff;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
         }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
+
+        .header h1 { margin: 0; font-size: 24px; color: var(--primary); }
+        .header .subtitle { margin-top: 6px; color: var(--text-sub); font-size: 15px; }
+        .header-actions { display: flex; gap: 12px; }
+
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 15px;
+            border: none;
+            transition: all 0.2s;
         }
-        th {
-            background-color: #0056b3;
+
+        .btn-primary { background-color: var(--accent); color: white; }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        .btn-secondary { background-color: #e2e8f0; color: #334155; }
+        .btn-secondary:hover { background-color: #cbd5e1; }
+
+        /* Tabs Navigation */
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 2px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            font-weight: 700;
+            font-size: 15px;
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+        }
+
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-badge { background: #e2e8f0; color: #334155; padding: 2px 8px; border-radius: 12px; font-size: 13px; margin-left: 6px; }
+        .tab-btn.active .tab-badge { background: #dbeafe; color: #1e40af; }
+
+        .table-card {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 15px; }
+        th { background-color: #f8fafc; padding: 16px 20px; font-weight: 700; color: #334155; border-bottom: 1px solid var(--border); text-transform: uppercase; font-size: 13px; letter-spacing: 0.5px; }
+        td { padding: 18px 20px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr.urgent-row { background-color: #fff1f2; }
+        tr.selected-row { outline: 2px solid var(--accent); }
+
+        .status-badge { display: inline-block; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 13px; }
+        .badge-pending { background: var(--warning-bg); color: var(--warning); border: 1px solid #fde68a; }
+        .badge-doing { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .badge-done { background: var(--success-bg); color: var(--success); border: 1px solid #bbf7d0; }
+
+        .overdue-text { color: var(--danger); font-weight: 800; font-size: 15px; }
+        .ok-text { color: var(--text-sub); font-weight: 600; }
+        .urgent-tag { background-color: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; }
+        .followup-tag { display: inline-block; margin-top: 6px; background: #f1f5f9; border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; font-size: 13px; color: #475569; font-weight: 600; }
+
+        /* Dynamic Popup Widget Styles */
+        .floating-alert {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 380px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-top: 5px solid var(--accent);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .floating-header {
+            padding: 16px;
+            background: #eff6ff;
+            border-bottom: 1px solid #bfdbfe;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .floating-body {
+            padding: 18px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 15px;
+            color: #1e3a8a;
+        }
+
+        .minimized-alert-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--accent);
             color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            z-index: 1999;
+            display: none;
+            animation: slideUp 0.3s ease-out;
         }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
+
+        /* Modal Dialog Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: var(--surface); width: 100%; max-width: 550px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15); overflow: hidden; }
+        .modal-header { padding: 18px 24px; border-bottom: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; font-size: 18px; color: var(--primary); }
+        .modal-body { padding: 24px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 14px; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; box-sizing: border-box; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); background: #f8fafc; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-danger { background: var(--danger); color: white; }
     </style>
 </head>
 <body>
 
-    <h2>🏏 Matchbook Roster & ICC Marks</h2>
-    <table id="roster-table">
-        <thead>
-            <tr>
-                <th>Rank</th>
-                <th>Player</th>
-                <th>Total Runs</th>
-                <th>100s</th>
-                <th>50s</th>
-                <th>20s</th>
-                <th>ICC Marks</th>
-            </tr>
-        </thead>
-        <tbody id="roster-body">
-            <!-- Rows will be injected here by JavaScript -->
-        </tbody>
-    </table>
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>Cleantech Progress Portal</h1>
+            <div class="subtitle">Executive Task Controller & Follow-up Tracker</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="editSelectedTask()">Edit Selected Task</button>
+            <button class="btn btn-primary" onclick="openModal(-1)">+ Create Task</button>
+        </div>
+    </div>
 
-    <!-- MATCH DATA BLOCK (Edit numbers here to fix mistakes) -->
-    <script id="seed-data" type="application/json">
-    [
-        {"matchNo": 1, "name": "A. Mathews", "totalRuns": 430},
-        {"matchNo": 2, "name": "D. Chandimal", "totalRuns": 490},
-        {"matchNo": 3, "name": "D. Gunathilake", "totalRuns": 360},
-        {"matchNo": 4, "name": "S. Abimana", "totalRuns": 320},
-        {"matchNo": 5, "name": "K. Perera", "totalRuns": 340},
-        {"matchNo": 6, "name": "D. Karunarathne", "totalRuns": 310}
-    ]
-    </script>
+    <!-- Split Views Navigation -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('pending')" id="tabPending">
+            Pending Tasks <span class="tab-badge" id="countPending">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('overdue')" id="tabOverdue">
+            Overdue Tasks <span class="tab-badge" id="countOverdue">0</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('completed')" id="tabCompleted">
+            Completed Tasks <span class="tab-badge" id="countCompleted">0</span>
+        </button>
+    </div>
 
-    <!-- CALCULATION & RENDERING LOGIC -->
-    <script>
-        // 1. Pull the data from the JSON block above
-        const rawData = JSON.parse(document.getElementById('seed-data').textContent);
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%; text-align: center;">Select</th>
+                    <th style="width: 32%;">Task / Report Description</th>
+                    <th style="width: 12%;">Status</th>
+                    <th style="width: 13%;">Due Date</th>
+                    <th style="width: 18%;">Time Remaining</th>
+                    <th style="width: 20%;">Remarks / Dynamic Progress</th>
+                    <th style="width: 0%; text-align: center;">Urgent</th>
+                </tr>
+            </thead>
+            <tbody id="taskTableBody">
+            </tbody>
+        </table>
+    </div>
+</div>
 
-        // 2. Cascading Milestones & ICC Marks Logic
-        function calculateStats(runs) {
-            let hundreds = 0, fifties = 0, twenties = 0;
-            let marks = runs; // Base points
+<!-- Dynamic Follow-up Alert Popup (Bottom Right) -->
+<div class="floating-alert" id="floatingAlert">
+    <div class="floating-header">
+        <span style="font-weight: 700; color: #1e3a8a; font-size: 16px;">🔔 Document / Follow-up Required</span>
+        <button onclick="minimizeAlert()" style="background:none; border:none; cursor:pointer; font-size: 26px; line-height: 1; color: #1e3a8a;" title="Minimize">−</button>
+    </div>
+    <div class="floating-body" id="floatingContent"></div>
+</div>
 
-            if (runs >= 20) { twenties = 1; marks += 10; }
-            if (runs >= 50) { fifties = 1; marks += 25; }
-            if (runs >= 100) { hundreds = 1; marks += 50; }
+<!-- Minimized Alert Button -->
+<button class="minimized-alert-btn" id="minimizedAlertBtn" onclick="maximizeAlert()">
+    🔔 View Follow-ups
+</button>
 
-            return { hundreds, fifties, twenties, marks };
+
+<!-- Task Edit/Create Modal -->
+<div class="modal-overlay" id="taskModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">Task Details</h3>
+            <button style="background:none; border:none; cursor:pointer; font-size:22px;" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="editIndex">
+            
+            <div class="form-group">
+                <label>Task / Report Name</label>
+                <input type="text" id="editName">
+            </div>
+
+            <div class="form-group">
+                <label>Recurring Frequency</label>
+                <select id="editFreq">
+                    <option value="Daily">Daily</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="3 Months">3 Months</option>
+                    <option value="On Request">On Request</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Status</label>
+                <select id="editStatus">
+                    <option value="Pending">Pending</option>
+                    <option value="Doing">Doing</option>
+                    <option value="Done">Done</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Task Due Date</label>
+                <input type="date" id="editDueDate">
+            </div>
+
+            <div class="form-group">
+                <label>Current Remarks / Operational Progress</label>
+                <textarea id="editNotes" rows="2" placeholder="e.g., Working on preliminary totals"></textarea>
+            </div>
+
+            <!-- Dynamic Follow-up Request Feature -->
+            <div style="background: #f1f5f9; padding: 14px; border-radius: 8px; border: 1px solid var(--border);" class="form-group">
+                <label style="color: var(--accent);">🔔 Requested Document / Follow-up Details</label>
+                <div style="display: flex; gap: 10px; margin-top: 8px;">
+                    <input type="text" id="editFollowupPerson" placeholder="Ask from (e.g. Saduni)" style="flex: 1;">
+                    <input type="date" id="editFollowupDate" style="flex: 1;">
+                </div>
+            </div>
+
+            <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+                <input type="checkbox" id="editUrgent" style="width: auto;">
+                <label for="editUrgent" style="margin: 0;">Mark as Urgent Priority</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" id="btnDelete" onclick="deleteTask()" style="margin-right: auto; display: none;">Delete</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveModalTask()">Save Task</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const initialTasks = [
+    { name: "Monthly Vehicle wise Fuel Report", freq: "Monthly", status: "Pending", dueDate: "2026-09-15", notes: "-", urgent: false, followupPerson: "", followupDate: "" },
+    { name: "Monthly Vehicle wise Spare-part Cost Report", freq: "Monthly", status: "Pending", dueDate: "2026-09-18", notes: "-", urgent: false, followupPerson: "", followupDate: "" },
+    { name: "Develop Monthly Head Count Analysis", freq: "3 Months", status: "Pending", dueDate: "2026-09-12", notes: "Handover to Charuka", urgent: true, followupPerson: "Charuka", followupDate: "2026-09-11" },
+    { name: "Develop Job wise Post Costing", freq: "Monthly", status: "Doing", dueDate: "2026-09-14", notes: "Submit to Ms. Dinusha", urgent: false, followupPerson: "Ms. Dinusha", followupDate: "2026-09-13" },
+    { name: "Payroll Analysis for CLT & AES", freq: "Monthly", status: "Pending", dueDate: "2026-09-20", notes: "-", urgent: false, followupPerson: "", followupDate: "" },
+    { name: "PEST Division Contribution", freq: "Monthly", status: "Doing", dueDate: "2026-09-13", notes: "Pending Saduni's Document", urgent: true, followupPerson: "Saduni", followupDate: "2026-09-10" }
+];
+
+let tasks = JSON.parse(localStorage.getItem('cleantech_tasks_v5')) || initialTasks;
+let currentTab = 'pending';
+let selectedRowIndex = -1;
+
+function calculateDaysLeft(dueDateStr, status) {
+    if (status === 'Done') return { text: "Completed", class: "ok-text", isOverdue: false };
+    if (!dueDateStr) return { text: "-", class: "", isOverdue: false };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(dueDateStr);
+    due.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return { text: `OVERDUE BY ${Math.abs(diffDays)} DAYS`, class: "overdue-text", isOverdue: true };
+    if (diffDays === 0) return { text: "DUE TODAY!", class: "overdue-text", isOverdue: true };
+    return { text: `${diffDays} days remaining`, class: "ok-text", isOverdue: false };
+}
+
+function checkFollowupReminders() {
+    const todayStr = new Date().toISOString().split('T')[0];
+    // Find tasks that are NOT done, and have a follow-up date that is today or in the past
+    const dueReminders = tasks.filter(t => t.status !== 'Done' && t.followupDate && t.followupDate <= todayStr);
+
+    const alertBox = document.getElementById('floatingAlert');
+    const alertContent = document.getElementById('floatingContent');
+    const minBtn = document.getElementById('minimizedAlertBtn');
+
+    if (dueReminders.length > 0) {
+        let html = "<ul style='margin:0; padding-left: 20px;'>";
+        dueReminders.forEach(r => {
+            html += `<li style='margin-bottom: 12px;'>Request/collect document from <strong>${escapeHtml(r.followupPerson)}</strong> regarding task <strong>"${escapeHtml(r.name)}"</strong>.</li>`;
+        });
+        html += "</ul>";
+        alertContent.innerHTML = html;
+        
+        // Show the popup automatically unless it was minimized during this browser session
+        if (!sessionStorage.getItem('alertMinimized')) {
+            alertBox.style.display = "flex";
+            minBtn.style.display = "none";
+        } else {
+            alertBox.style.display = "none";
+            minBtn.style.display = "block";
+        }
+    } else {
+        alertBox.style.display = "none";
+        minBtn.style.display = "none";
+    }
+}
+
+function minimizeAlert() {
+    document.getElementById('floatingAlert').style.display = 'none';
+    document.getElementById('minimizedAlertBtn').style.display = 'block';
+    sessionStorage.setItem('alertMinimized', 'true');
+}
+
+function maximizeAlert() {
+    document.getElementById('floatingAlert').style.display = 'flex';
+    document.getElementById('minimizedAlertBtn').style.display = 'none';
+    sessionStorage.removeItem('alertMinimized');
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (tab === 'pending') document.getElementById('tabPending').classList.add('active');
+    if (tab === 'overdue') document.getElementById('tabOverdue').classList.add('active');
+    if (tab === 'completed') document.getElementById('tabCompleted').classList.add('active');
+    selectedRowIndex = -1;
+    renderTable();
+}
+
+function renderTable() {
+    const tbody = document.getElementById('taskTableBody');
+    tbody.innerHTML = '';
+
+    let pendingCount = 0, overdueCount = 0, completedCount = 0;
+
+    tasks.forEach((task) => {
+        const daysInfo = calculateDaysLeft(task.dueDate, task.status);
+        if (task.status === 'Done') completedCount++;
+        else if (daysInfo.isOverdue) overdueCount++;
+        else pendingCount++;
+    });
+
+    document.getElementById('countPending').innerText = pendingCount;
+    document.getElementById('countOverdue').innerText = overdueCount;
+    document.getElementById('countCompleted').innerText = completedCount;
+
+    tasks.forEach((task, index) => {
+        const daysInfo = calculateDaysLeft(task.dueDate, task.status);
+
+        if (currentTab === 'completed' && task.status !== 'Done') return;
+        if (currentTab === 'overdue' && (task.status === 'Done' || !daysInfo.isOverdue)) return;
+        if (currentTab === 'pending' && (task.status === 'Done' || daysInfo.isOverdue)) return;
+
+        const tr = document.createElement('tr');
+        if (task.urgent) tr.classList.add('urgent-row');
+        if (selectedRowIndex === index) tr.classList.add('selected-row');
+
+        const statusBadgeClass = task.status === 'Pending' ? 'badge-pending' : (task.status === 'Doing' ? 'badge-doing' : 'badge-done');
+
+        let followupHTML = "";
+        if (task.followupPerson && task.followupDate) {
+            followupHTML = `<div class="followup-tag">📌 Wait for ${escapeHtml(task.followupPerson)} on ${task.followupDate}</div>`;
         }
 
-        // 3. Sort players by ICC Marks (Highest to Lowest)
-        const processedData = rawData.map(player => {
-            const stats = calculateStats(player.totalRuns);
-            return { ...player, ...stats };
-        }).sort((a, b) => b.marks - a.marks);
+        tr.innerHTML = `
+            <td style="text-align: center;">
+                <input type="radio" name="selectedTask" ${selectedRowIndex === index ? 'checked' : ''} onchange="selectRow(${index})">
+            </td>
+            <td style="font-weight: 700;">${escapeHtml(task.name)}</td>
+            <td><span class="status-badge ${statusBadgeClass}">${task.status}</span></td>
+            <td style="font-weight: 600;">${task.dueDate || '-'}</td>
+            <td><span class="${daysInfo.class}">${daysInfo.text}</span></td>
+            <td>
+                <div>${escapeHtml(task.notes || '-')}</div>
+                ${followupHTML}
+            </td>
+            <td style="text-align: center;">${task.urgent ? '<span class="urgent-tag">URGENT</span>' : '-'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
 
-        // 4. Inject into the HTML Table
-        const rosterBody = document.getElementById('roster-body');
+    localStorage.setItem('cleantech_tasks_v5', JSON.stringify(tasks));
+    checkFollowupReminders();
+}
 
-        processedData.forEach((player, index) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${player.name}</td>
-                <td>${player.totalRuns}</td>
-                <td>${player.hundreds}</td>
-                <td>${player.fifties}</td>
-                <td>${player.twenties}</td>
-                <td><strong>${player.marks}</strong></td>
-            `;
-            rosterBody.appendChild(tr);
-        });
-    </script>
+function selectRow(index) {
+    selectedRowIndex = index;
+    renderTable();
+}
 
+function editSelectedTask() {
+    if (selectedRowIndex === -1) { alert("Please select a task from the list first."); return; }
+    openModal(selectedRowIndex);
+}
+
+function openModal(index) {
+    document.getElementById('editIndex').value = index;
+    if (index === -1) {
+        document.getElementById('modalTitle').innerText = "Create New Task";
+        document.getElementById('editName').value = "";
+        document.getElementById('editFreq').value = "Monthly";
+        document.getElementById('editStatus').value = "Pending";
+        document.getElementById('editDueDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('editNotes').value = "";
+        document.getElementById('editFollowupPerson').value = "";
+        document.getElementById('editFollowupDate').value = "";
+        document.getElementById('editUrgent').checked = false;
+        document.getElementById('btnDelete').style.display = "none";
+    } else {
+        const t = tasks[index];
+        document.getElementById('modalTitle').innerText = "Edit Task Details";
+        document.getElementById('editName').value = t.name;
+        document.getElementById('editFreq').value = t.freq || "Monthly";
+        document.getElementById('editStatus').value = t.status;
+        document.getElementById('editDueDate').value = t.dueDate;
+        document.getElementById('editNotes').value = t.notes;
+        document.getElementById('editFollowupPerson').value = t.followupPerson || "";
+        document.getElementById('editFollowupDate').value = t.followupDate || "";
+        document.getElementById('editUrgent').checked = t.urgent;
+        document.getElementById('btnDelete').style.display = "block";
+    }
+    document.getElementById('taskModal').style.display = "flex";
+}
+
+function closeModal() { document.getElementById('taskModal').style.display = "none"; }
+
+function saveModalTask() {
+    const idx = parseInt(document.getElementById('editIndex').value);
+    const newStatus = document.getElementById('editStatus').value;
+    const newFreq = document.getElementById('editFreq').value;
+    const currentDueDate = document.getElementById('editDueDate').value;
+
+    const taskData = {
+        name: document.getElementById('editName').value || "Untitled Task",
+        freq: newFreq,
+        status: newStatus,
+        dueDate: currentDueDate,
+        notes: document.getElementById('editNotes').value,
+        followupPerson: document.getElementById('editFollowupPerson').value,
+        followupDate: document.getElementById('editFollowupDate').value,
+        urgent: document.getElementById('editUrgent').checked
+    };
+
+    if (idx === -1) {
+        tasks.unshift(taskData);
+    } else {
+        const oldStatus = tasks[idx].status;
+        tasks[idx] = taskData;
+
+        // Auto-recurring schedule on completion
+        if (newStatus === 'Done' && oldStatus !== 'Done' && newFreq !== 'On Request') {
+            let nextDate = new Date(currentDueDate || new Date());
+            if (newFreq === 'Daily') nextDate.setDate(nextDate.getDate() + 1);
+            if (newFreq === 'Monthly') nextDate.setMonth(nextDate.getMonth() + 1);
+            if (newFreq === '3 Months') nextDate.setMonth(nextDate.getMonth() + 3);
+
+            tasks.unshift({
+                name: taskData.name, freq: taskData.freq, status: "Pending",
+                dueDate: nextDate.toISOString().split('T')[0], notes: taskData.notes,
+                followupPerson: "", followupDate: "", urgent: false
+            });
+        }
+    }
+    closeModal();
+    renderTable();
+}
+
+function deleteTask() {
+    const idx = parseInt(document.getElementById('editIndex').value);
+    if (idx >= 0) { tasks.splice(idx, 1); selectedRowIndex = -1; }
+    closeModal(); renderTable();
+}
+
+function escapeHtml(text) {
+    return (text || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+renderTable();
+</script>
 </body>
 </html>
