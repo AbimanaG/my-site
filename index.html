@@ -1,41 +1,113 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Site</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f5f5f5;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .card {
-      background: white;
-      padding: 40px 50px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      text-align: center;
-      max-width: 400px;
-    }
-    h1 {
-      color: #222;
-      margin-bottom: 10px;
-    }
-    p {
-      color: #666;
-      line-height: 1.5;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EA Cricket 07 - Matchbook Leaderboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h2 {
+            color: #0056b3;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #0056b3;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Hello, World! 👋</h1>
-    <p>This is my first page hosted on GitHub Pages. Edit this file to make it your own.</p>
-  </div>
+
+    <h2>🏏 Matchbook Roster & ICC Marks</h2>
+    <table id="roster-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Total Runs</th>
+                <th>100s</th>
+                <th>50s</th>
+                <th>20s</th>
+                <th>ICC Marks</th>
+            </tr>
+        </thead>
+        <tbody id="roster-body">
+            <!-- Rows will be injected here by JavaScript -->
+        </tbody>
+    </table>
+
+    <!-- MATCH DATA BLOCK (Edit numbers here to fix mistakes) -->
+    <script id="seed-data" type="application/json">
+    [
+        {"matchNo": 1, "name": "A. Mathews", "totalRuns": 430},
+        {"matchNo": 2, "name": "D. Chandimal", "totalRuns": 490},
+        {"matchNo": 3, "name": "D. Gunathilake", "totalRuns": 360},
+        {"matchNo": 4, "name": "S. Abimana", "totalRuns": 320},
+        {"matchNo": 5, "name": "K. Perera", "totalRuns": 340},
+        {"matchNo": 6, "name": "D. Karunarathne", "totalRuns": 310}
+    ]
+    </script>
+
+    <!-- CALCULATION & RENDERING LOGIC -->
+    <script>
+        // 1. Pull the data from the JSON block above
+        const rawData = JSON.parse(document.getElementById('seed-data').textContent);
+
+        // 2. Cascading Milestones & ICC Marks Logic
+        function calculateStats(runs) {
+            let hundreds = 0, fifties = 0, twenties = 0;
+            let marks = runs; // Base points
+
+            if (runs >= 20) { twenties = 1; marks += 10; }
+            if (runs >= 50) { fifties = 1; marks += 25; }
+            if (runs >= 100) { hundreds = 1; marks += 50; }
+
+            return { hundreds, fifties, twenties, marks };
+        }
+
+        // 3. Sort players by ICC Marks (Highest to Lowest)
+        const processedData = rawData.map(player => {
+            const stats = calculateStats(player.totalRuns);
+            return { ...player, ...stats };
+        }).sort((a, b) => b.marks - a.marks);
+
+        // 4. Inject into the HTML Table
+        const rosterBody = document.getElementById('roster-body');
+
+        processedData.forEach((player, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${player.name}</td>
+                <td>${player.totalRuns}</td>
+                <td>${player.hundreds}</td>
+                <td>${player.fifties}</td>
+                <td>${player.twenties}</td>
+                <td><strong>${player.marks}</strong></td>
+            `;
+            rosterBody.appendChild(tr);
+        });
+    </script>
+
 </body>
 </html>
